@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEditor.Experimental.GraphView;
 
 public class CardDisplay : MonoBehaviour
 {
@@ -15,18 +16,20 @@ public class CardDisplay : MonoBehaviour
     public TextMeshPro descriptionText;
 
 
-    private bool isDragging = false;
+    public bool isDragging = false;
     private Vector3 originalPosition;
 
     public LayerMask enemyLater;
     public LayerMask playerLayer;
 
+    private CardManager cardManager;
     // Start is called before the first frame update
     void Start()
     {
         playerLayer = LayerMask.GetMask("Player");
         enemyLater = LayerMask.GetMask("Enemy");
 
+        cardManager = FindObjectOfType<CardManager>();
 
         SetupCard(cardData);
     }
@@ -67,6 +70,9 @@ public class CardDisplay : MonoBehaviour
 
     private void OnMouseUp()
     {
+        
+        
+        
         isDragging = false;
 
         RaycastHit hit;
@@ -78,27 +84,27 @@ public class CardDisplay : MonoBehaviour
         {
             CharacterStats enemyStats = hit.collider.GetComponent<CharacterStats>();
 
-            if(enemyStats != null)
+            if (enemyStats != null)
             {
-                if(cardData.cardtype == CardData.CardType.Attack)
+                if (cardData.cardtype == CardData.CardType.Attack)
                 {
                     enemyStats.TakeDamage(cardData.effectAmount);
                     Debug.Log($"{cardData.cardName} 카드로 적에게 {cardData.effectAmount} 데미지를 입혔습니다.");
                     cardUsed = true;
                 }
-                else 
+                else
                 {
                     Debug.Log("이 카드는 적에게 사용 할 수 없습니다.");
                 }
             }
         }
-        else if(Physics.Raycast(ray, out hit, Mathf.Infinity, playerLayer))
+        else if (Physics.Raycast(ray, out hit, Mathf.Infinity, playerLayer))
         {
             CharacterStats playerStats = hit.collider.GetComponent<CharacterStats>();
 
-            if(playerStats != null)
+            if (playerStats != null)
             {
-                if(cardData.cardtype == CardData.CardType.Heal)
+                if (cardData.cardtype == CardData.CardType.Heal)
                 {
                     playerStats.Heal(cardData.effectAmount);
                     Debug.Log($"{cardData.cardName} 카드로 플레이어의 체력을 {cardData.effectAmount} 회복했습니다!");
@@ -110,14 +116,31 @@ public class CardDisplay : MonoBehaviour
                 }
             }
         }
+        else if (cardManager != null)
+        {
 
-        if(!cardUsed)
+            float distToDiscard = Vector3.Distance(transform.position, cardManager.discardPosition.position);
+            if (distToDiscard < 2.0f)
+            {
+                cardManager.DiscardCard(cardIndex);
+                return;
+            }
+        }
+        
+        
+        if (!cardUsed)
         {
             transform.position = originalPosition;
+            cardManager.ArrangeHand();
         }
         else
         {
-            Destroy(gameObject);
+            if (cardManager != null)
+                cardManager.DiscardCard(cardIndex);
         }
+    
+       
     }
+
+
 }
