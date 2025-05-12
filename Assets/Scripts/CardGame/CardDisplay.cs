@@ -68,10 +68,20 @@ public class CardDisplay : MonoBehaviour
         }
     }
 
+   
+
+
+
     private void OnMouseUp()
     {
-        
-        
+
+        CharacterStats playerStats = FindObjectOfType<CharacterStats>();
+        if(playerStats == null || playerStats.currentMana < cardData.manaCost)
+        {
+            Debug.Log($"마나가 부족합니다! (필요 : {cardData.manaCost}, 현재 : {playerStats?.currentMana ?? 0}");
+            transform.position = originalPosition;
+            return;
+        }
         
         isDragging = false;
 
@@ -100,7 +110,7 @@ public class CardDisplay : MonoBehaviour
         }
         else if (Physics.Raycast(ray, out hit, Mathf.Infinity, playerLayer))
         {
-            CharacterStats playerStats = hit.collider.GetComponent<CharacterStats>();
+           // CharacterStats playerStats = hit.collider.GetComponent<CharacterStats>();
 
             if (playerStats != null)
             {
@@ -137,10 +147,36 @@ public class CardDisplay : MonoBehaviour
         {
             if (cardManager != null)
                 cardManager.DiscardCard(cardIndex);
+
+            playerStats.UseMana(cardData.manaCost);
+            Debug.Log($"마나를 {cardData.manaCost} 사용 했습니다. (남은 마나 : {playerStats.currentMana})");
         }
-    
+        
        
     }
 
+    private void ProcessAdditionalEffectsAndDiscard()
+    {
 
+        CardData cardDatacopy = cardData;
+        int cardIndexCopy = cardIndex;
+
+        foreach(var effect in cardDatacopy.additionalEffects)
+        {
+            switch (effect.effectType)
+            {
+                case CardData.AdditionalEffectType.DrawCard:
+                    
+                    for (int i = 0; i < effect.effectAmount; i++)
+                    {
+                        if(cardManager != null)
+                        {
+                            cardManager.DrawCard();
+                        }
+                    }
+                    Debug.Log($"{effect.effectAmount} 장의 카드를 드로우 했습니다.");
+                    break;
+            }
+        }
+    }
 }

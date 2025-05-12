@@ -55,7 +55,7 @@ public class CardManager : MonoBehaviour
 
     public void DrawCard()
     {
-        if(handCards.Count >= 0)
+        if(handCards.Count >= 6)
         {
             Debug.Log("손패가 가득 찼습니다. !(최대 6장)");
             return;
